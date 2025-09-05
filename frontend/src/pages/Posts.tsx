@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { postApi, userApi } from '../services/api';
-import type { PostWithRelations, CreatePostDto, User, PaginatedResponse } from '../types';
+import { postApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import type { PostWithRelations, CreatePostDto, PaginatedResponse } from '../types';
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -11,8 +12,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Posts = () => {
+  const { user, isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<PaginatedResponse<PostWithRelations> | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -23,13 +24,11 @@ const Posts = () => {
   const [formData, setFormData] = useState<CreatePostDto>({
     title: '',
     content: '',
-    authorId: 0,
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   useEffect(() => {
     fetchPosts();
-    fetchUsers();
   }, [currentPage]);
 
   const fetchPosts = async () => {
@@ -46,14 +45,6 @@ const Posts = () => {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const data = await userApi.getAll();
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +58,7 @@ const Posts = () => {
       } else {
         await postApi.create(formData, selectedImage || undefined);
       }
-      setFormData({ title: '', content: '', authorId: 0 });
+      setFormData({ title: '', content: '' });
       setSelectedImage(null);
       setShowCreateForm(false);
       fetchPosts();
@@ -93,8 +84,7 @@ const Posts = () => {
     setEditingPost(post);
     setFormData({ 
       title: post.title, 
-      content: post.content, 
-      authorId: post.author.id 
+      content: post.content
     });
     setShowCreateForm(true);
   };
@@ -102,7 +92,7 @@ const Posts = () => {
   const handleCancel = () => {
     setShowCreateForm(false);
     setEditingPost(null);
-    setFormData({ title: '', content: '', authorId: 0 });
+    setFormData({ title: '', content: '' });
     setSelectedImage(null);
   };
 
@@ -128,14 +118,30 @@ const Posts = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Posts</h1>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Add Post
-        </button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Posts</h1>
+          {isAuthenticated && user && (
+            <p className="text-sm text-gray-600 mt-1">
+              Welcome, {user.name}!
+            </p>
+          )}
+        </div>
+        {isAuthenticated ? (
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add Post
+          </button>
+        ) : (
+          <div className="text-sm text-gray-600">
+            <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+              Sign in
+            </Link>
+            {' '}to create posts
+          </div>
+        )}
       </div>
 
       {error && (
@@ -176,25 +182,6 @@ const Posts = () => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
                 required
               />
-            </div>
-            <div>
-              <label htmlFor="authorId" className="block text-sm font-medium text-gray-700">
-                Author
-              </label>
-              <select
-                id="authorId"
-                value={formData.authorId}
-                onChange={(e) => setFormData({ ...formData, authorId: parseInt(e.target.value) })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
-                required
-              >
-                <option value={0}>Select an author</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
             </div>
             {!editingPost && (
               <div>
@@ -259,20 +246,24 @@ const Posts = () => {
                     >
                       <EyeIcon className="h-5 w-5" />
                     </Link>
-                    <button
-                      onClick={() => handleEdit(post)}
-                      className="text-yellow-600 hover:text-yellow-900"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    {isAuthenticated && user && user.id === post.author.id && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(post)}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Edit"
+                        >
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(post.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
                 

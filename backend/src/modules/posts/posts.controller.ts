@@ -10,6 +10,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -18,12 +20,14 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationDto } from './dto/pagination.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -41,10 +45,13 @@ export class PostsController {
   create(
     @Body() createPostDto: CreatePostDto,
     @UploadedFile() file?: Express.Multer.File,
+    @Request() req?: any,
   ) {
     if (file) {
       createPostDto.image = file.filename;
     }
+    // Use authenticated user's ID
+    createPostDto.userId = req.user.id;
     return this.postsService.create(createPostDto);
   }
 
@@ -67,15 +74,18 @@ export class PostsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
+    @Request() req?: any,
   ) {
-    return this.postsService.update(id, updatePostDto);
+    return this.postsService.update(id, updatePostDto, req.user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.remove(id);
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req?: any) {
+    return this.postsService.remove(id, req.user.id);
   }
 }

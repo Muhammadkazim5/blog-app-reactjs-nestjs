@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { postApi, commentApi, userApi } from '../services/api';
-import type { PostWithRelations, CommentWithRelations, User, CreateCommentDto } from '../types';
+import { postApi, commentApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import type { PostWithRelations, CommentWithRelations, CreateCommentAuthDto } from '../types';
 import { 
   DocumentTextIcon,
   ArrowLeftIcon,
-  PencilIcon,
   TrashIcon,
   ChatBubbleLeftRightIcon,
   UserIcon,
-  PlusIcon
+  PlusIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 
 const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuth();
   const [post, setPost] = useState<PostWithRelations | null>(null);
   const [comments, setComments] = useState<CommentWithRelations[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -27,21 +28,12 @@ const PostDetail = () => {
     content: '',
   });
 
-  const [commentFormData, setCommentFormData] = useState<CreateCommentDto>({
+  const [commentFormData, setCommentFormData] = useState<CreateCommentAuthDto>({
     content: '',
-    userId: 0,
     postId: 0,
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchPost();
-      fetchComments();
-      fetchUsers();
-    }
-  }, [id]);
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       setLoading(true);
       const data = await postApi.getById(parseInt(id!));
@@ -55,25 +47,24 @@ const PostDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const data = await commentApi.getByPost(parseInt(id!));
       setComments(data);
     } catch (err) {
       console.error('Error fetching comments:', err);
     }
-  };
+  }, [id]);
 
-  const fetchUsers = async () => {
-    try {
-      const data = await userApi.getAll();
-      setUsers(data);
-    } catch (err) {
-      console.error('Error fetching users:', err);
+  useEffect(() => {
+    if (id) {
+      fetchPost();
+      fetchComments();
     }
-  };
+  }, [id, fetchPost, fetchComments]);
+
 
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +81,8 @@ const PostDetail = () => {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await commentApi.create(commentFormData);
-      setCommentFormData({ content: '', userId: 0, postId: post!.id });
+      await commentApi.createAuth(commentFormData);
+      setCommentFormData({ content: '', postId: post!.id });
       setShowCommentForm(false);
       fetchComments();
     } catch (err) {
@@ -100,17 +91,6 @@ const PostDetail = () => {
     }
   };
 
-  const handleDeletePost = async () => {
-    if (window.confirm('Are you sure you want to delete this post? This will also delete all comments.')) {
-      try {
-        await postApi.delete(post!.id);
-        window.location.href = '/posts';
-      } catch (err) {
-        setError('Failed to delete post');
-        console.error('Error deleting post:', err);
-      }
-    }
-  };
 
   const handleDeleteComment = async (commentId: number) => {
     if (window.confirm('Are you sure you want to delete this comment?')) {
@@ -131,7 +111,7 @@ const PostDetail = () => {
 
   const handleCancelComment = () => {
     setShowCommentForm(false);
-    setCommentFormData({ content: '', userId: 0, postId: post!.id });
+    setCommentFormData({ content: '', postId: post!.id });
   };
 
   if (loading) {
@@ -166,7 +146,7 @@ const PostDetail = () => {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">Post Details</h1>
         </div>
-        <div className="flex space-x-2">
+        {/* <div className="flex space-x-2">
           <button
             onClick={() => setShowEditForm(true)}
             className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md flex items-center"
@@ -181,7 +161,7 @@ const PostDetail = () => {
             <TrashIcon className="h-5 w-5 mr-2" />
             Delete
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Edit Post Form */}
@@ -272,19 +252,35 @@ const PostDetail = () => {
           <h2 className="text-2xl font-bold text-gray-900">
             Comments ({comments.length})
           </h2>
-          <button
-            onClick={() => setShowCommentForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Add Comment
-          </button>
+          {isAuthenticated ? (
+            <button
+              onClick={() => setShowCommentForm(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add Comment
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center"
+            >
+              <LockClosedIcon className="h-5 w-5 mr-2" />
+              Login to Comment
+            </Link>
+          )}
         </div>
 
         {/* Add Comment Form */}
-        {showCommentForm && (
+        {showCommentForm && isAuthenticated && (
           <div className="bg-white shadow rounded-lg p-6 mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Add Comment</h3>
+            <div className="mb-4 p-3 bg-blue-50 rounded-md">
+              <div className="flex items-center text-sm text-blue-800">
+                <UserIcon className="h-4 w-4 mr-2" />
+                Commenting as: <span className="font-medium ml-1">{user?.name}</span>
+              </div>
+            </div>
             <form onSubmit={handleCommentSubmit} className="space-y-4">
               <div>
                 <label htmlFor="commentContent" className="block text-sm font-medium text-gray-700">
@@ -296,27 +292,9 @@ const PostDetail = () => {
                   value={commentFormData.content}
                   onChange={(e) => setCommentFormData({ ...commentFormData, content: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
+                  placeholder="Write your comment here..."
                   required
                 />
-              </div>
-              <div>
-                <label htmlFor="commentUserId" className="block text-sm font-medium text-gray-700">
-                  User
-                </label>
-                <select
-                  id="commentUserId"
-                  value={commentFormData.userId}
-                  onChange={(e) => setCommentFormData({ ...commentFormData, userId: parseInt(e.target.value) })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
-                  required
-                >
-                  <option value={0}>Select a user</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div className="flex space-x-3">
                 <button
@@ -340,7 +318,16 @@ const PostDetail = () => {
         {/* Comments List */}
         {comments.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-6 text-center text-gray-500">
-            No comments yet. Be the first to comment!
+            {isAuthenticated ? (
+              <p>No comments yet. Be the first to comment!</p>
+            ) : (
+              <div>
+                <p>No comments yet.</p>
+                <Link to="/login" className="text-blue-600 hover:text-blue-800 mt-2 inline-block">
+                  Login to be the first to comment!
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

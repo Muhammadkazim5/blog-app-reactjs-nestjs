@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from './post.entity';
@@ -68,28 +68,27 @@ export class PostsService {
   async update(
     id: number,
     updatePostDto: Partial<CreatePostDto>,
+    userId?: number,
   ): Promise<Post> {
     const post = await this.findOne(id);
 
-    if (updatePostDto.userId) {
-      const user = await this.usersRepository.findOne({
-        where: { id: updatePostDto.userId },
-      });
-
-      if (!user) {
-        throw new NotFoundException(
-          `User with ID ${updatePostDto.userId} not found`,
-        );
-      }
-      post.author = user;
+    // Check if user is authorized to update this post
+    if (userId && post.author.id !== userId) {
+      throw new ForbiddenException('You can only update your own posts');
     }
 
     Object.assign(post, updatePostDto);
     return await this.postsRepository.save(post);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId?: number): Promise<void> {
     const post = await this.findOne(id);
+
+    // Check if user is authorized to delete this post
+    if (userId && post.author.id !== userId) {
+      throw new ForbiddenException('You can only delete your own posts');
+    }
+
     await this.postsRepository.remove(post);
   }
 

@@ -5,6 +5,7 @@ import { getTypeOrmConfig } from './config/db';
 import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CommentsModule } from './modules/comments/comments.module';
     UsersModule,
     PostsModule,
     CommentsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

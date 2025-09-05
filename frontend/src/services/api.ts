@@ -4,6 +4,7 @@ import type {
   UserWithRelations,
   CreateUserDto, 
   UpdateUserDto,
+  UpdateProfileDto,
   Post,
   PostWithRelations,
   CreatePostDto,
@@ -11,8 +12,10 @@ import type {
   Comment,
   CommentWithRelations,
   CreateCommentDto,
+  CreateCommentAuthDto,
   UpdateCommentDto,
-  PaginationDto
+  PaginationDto,
+  PaginatedResponse
 } from '../types';
 
 const API_BASE_URL = '/api';
@@ -23,6 +26,20 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add token to requests if available
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add error handling interceptor
 api.interceptors.response.use(
@@ -40,6 +57,29 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Auth API
+export const authApi = {
+  login: async (data: { email: string; password: string }) => {
+    const response = await api.post('/auth/login', data);
+    return response.data;
+  },
+
+  register: async (data: { name: string; email: string; password: string }) => {
+    const response = await api.post('/auth/register', data);
+    return response.data;
+  },
+
+  getProfile: async () => {
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+
+  updateProfile: async (data: UpdateProfileDto) => {
+    const response = await api.patch('/auth/profile', data);
+    return response.data;
+  },
+};
 
 // User API
 export const userApi = {
@@ -73,6 +113,12 @@ export const postApi = {
   getAll: async (pagination?: PaginationDto): Promise<PostWithRelations[]> => {
     const params = pagination ? { page: pagination.page, limit: pagination.limit } : {};
     const response = await api.get('/posts', { params });
+    return response.data.data || response.data; // Handle both paginated and non-paginated responses
+  },
+
+  getAllWithPagination: async (pagination?: PaginationDto): Promise<PaginatedResponse<PostWithRelations>> => {
+    const params = pagination ? { page: pagination.page, limit: pagination.limit } : {};
+    const response = await api.get('/posts', { params });
     return response.data;
   },
 
@@ -93,7 +139,6 @@ export const postApi = {
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('content', data.content);
-      formData.append('userId', data.authorId.toString()); // Backend expects userId
       
       if (image) {
         formData.append('image', image);
@@ -110,7 +155,6 @@ export const postApi = {
       const postData = {
         title: data.title,
         content: data.content,
-        userId: data.authorId, // Backend expects userId
         ...(data.image && { image: data.image })
       };
       
@@ -152,6 +196,11 @@ export const commentApi = {
   },
 
   create: async (data: CreateCommentDto): Promise<Comment> => {
+    const response = await api.post('/comments', data);
+    return response.data;
+  },
+
+  createAuth: async (data: CreateCommentAuthDto): Promise<Comment> => {
     const response = await api.post('/comments', data);
     return response.data;
   },

@@ -47,10 +47,15 @@ export interface UpdateUserDto {
   email?: string;
 }
 
+export interface UpdateProfileDto {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
 export interface CreatePostDto {
   title: string;
   content: string;
-  authorId: number;
   image?: string;
 }
 
@@ -63,6 +68,11 @@ export interface UpdatePostDto {
 export interface CreateCommentDto {
   content: string;
   userId: number;
+  postId: number;
+}
+
+export interface CreateCommentAuthDto {
+  content: string;
   postId: number;
 }
 

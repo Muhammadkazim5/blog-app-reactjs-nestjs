@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   HomeIcon, 
-  UsersIcon, 
+  // UsersIcon, 
   DocumentTextIcon, 
-  ChatBubbleLeftRightIcon,
+  // ChatBubbleLeftRightIcon,
+  UserIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -13,12 +16,13 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon },
-    { name: 'Users', href: '/users', icon: UsersIcon },
+    // { name: 'Users', href: '/users', icon: UsersIcon },
     { name: 'Posts', href: '/posts', icon: DocumentTextIcon },
-    { name: 'Comments', href: '/comments', icon: ChatBubbleLeftRightIcon },
+    // { name: 'Comments', href: '/comments', icon: ChatBubbleLeftRightIcon },
   ];
 
   return (
@@ -30,7 +34,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <h1 className="text-xl font-bold text-gray-900">
-                  NestJS Blog
+                  Blog App
                 </h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -52,6 +56,45 @@ const Layout = ({ children }: LayoutProps) => {
                   );
                 })}
               </div>
+            </div>
+            
+            {/* Auth section */}
+            <div className="flex items-center space-x-4">
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <UserIcon className="h-5 w-5 text-gray-500" />
+                    <Link
+                      to="/profile"
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+                    >
+                      {user?.name}
+                    </Link>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <ArrowRightOnRectangleIcon className="h-4 w-4 mr-1" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
