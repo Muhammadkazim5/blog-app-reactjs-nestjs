@@ -12,6 +12,7 @@ import {
   HeartIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline';
+import ImageDisplay from '../components/ImageDisplay';
 import type { PostWithRelations } from '../types';
 
 const Home = () => {
@@ -27,12 +28,12 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch recent posts (limit to 6)
-        const recentPosts = await postApi.getAll({ page: 1, limit: 6 });
+        // Fetch recent posts (limit to 3)
+        const recentPosts = await postApi.getAll({ page: 1, limit: 3 });
         setRecentPosts(recentPosts);
 
-        // Fetch all posts to get accurate count
-        const allPosts = await postApi.getAll();
+        // Fetch all posts with pagination to get accurate count
+        const allPostsResponse = await postApi.getAllWithPagination();
         
         // Fetch other stats
         const [users, comments] = await Promise.all([
@@ -42,7 +43,7 @@ const Home = () => {
 
         setStats({
           totalUsers: users.length,
-          totalPosts: allPosts.length, // Use the actual count of all posts
+          totalPosts: allPostsResponse.total, // Use the total count from paginated response
           totalComments: comments.length
         });
       } catch (error) {
@@ -159,7 +160,7 @@ const Home = () => {
       <div className="bg-white shadow-lg rounded-xl border border-gray-100">
         <div className="px-6 py-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Recent Posts</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Latest Posts</h2>
             <Link
               to="/posts"
               className="inline-flex items-center text-blue-600 hover:text-blue-500 font-medium"
@@ -180,30 +181,51 @@ const Home = () => {
             {recentPosts.map((post) => (
               <div key={post.id} className="group cursor-pointer">
                 <Link to={`/posts/${post.id}`}>
-                  <div className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {post.author?.name || 'Anonymous'}
-                      </span>
-                      <span className="inline-flex items-center text-xs text-gray-500">
-                        <CalendarIcon className="h-3 w-3 mr-1" />
-                        {formatDate(new Date().toISOString())}
-                      </span>
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200">
+                    {/* Image Section */}
+                    <div className="aspect-w-16 aspect-h-9 bg-gray-100">
+                      {post.image ? (
+                        <ImageDisplay
+                          imagePath={post.image}
+                          alt={post.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <div className="text-center text-gray-400">
+                            <DocumentTextIcon className="h-12 w-12 mx-auto mb-2" />
+                            <p className="text-sm font-medium">No Image</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4">
-                      {truncateText(post.content, 120)}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <HeartIcon className="h-4 w-4 mr-1" />
-                          {post.comments?.length || 0} comments
+                    
+                    {/* Content Section */}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {post.author?.name || 'Anonymous'}
+                        </span>
+                        <span className="inline-flex items-center text-xs text-gray-500">
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          {formatDate(new Date().toISOString())}
                         </span>
                       </div>
-                      <ArrowRightIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                        {truncateText(post.content, 120)}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <span className="flex items-center">
+                            <HeartIcon className="h-4 w-4 mr-1" />
+                            {post.comments?.length || 0} comments
+                          </span>
+                        </div>
+                        <ArrowRightIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      </div>
                     </div>
                   </div>
                 </Link>

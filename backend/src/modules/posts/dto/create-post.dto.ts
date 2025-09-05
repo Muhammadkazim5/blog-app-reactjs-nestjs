@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class CreatePostDto {
   @IsNotEmpty()
@@ -14,5 +14,7 @@ export class CreatePostDto {
   image?: string;
 
   // userId will be set automatically from authenticated user
+  @IsOptional()
+  @IsNumber()
   userId?: number;
 }

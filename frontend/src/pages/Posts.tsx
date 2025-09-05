@@ -10,6 +10,8 @@ import {
   EyeIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
+import ImageUpload from '../components/ImageUpload';
+import ImageDisplay from '../components/ImageDisplay';
 
 const Posts = () => {
   const { user, isAuthenticated } = useAuth();
@@ -96,12 +98,6 @@ const Posts = () => {
     setSelectedImage(null);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-    }
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -185,15 +181,12 @@ const Posts = () => {
             </div>
             {!editingPost && (
               <div>
-                <label htmlFor="image" className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Image (optional)
                 </label>
-                <input
-                  type="file"
-                  id="image"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                <ImageUpload
+                  onImageSelect={setSelectedImage}
+                  className="max-w-md"
                 />
               </div>
             )}
@@ -276,10 +269,10 @@ const Posts = () => {
 
                 {post.image && (
                   <div className="mb-4">
-                    <img
-                      src={`http://localhost:3000/uploads/${post.image}`}
+                    <ImageDisplay
+                      imagePath={post.image}
                       alt={post.title}
-                      className="h-48 w-full object-cover rounded-md"
+                      className="h-48 w-full"
                     />
                   </div>
                 )}

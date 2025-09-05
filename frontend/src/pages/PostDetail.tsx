@@ -12,6 +12,7 @@ import {
   PlusIcon,
   LockClosedIcon
 } from '@heroicons/react/24/outline';
+import ImageDisplay from '../components/ImageDisplay';
 
 const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -233,10 +234,10 @@ const PostDetail = () => {
         <div className="px-6 py-4">
           {post.image && (
             <div className="mb-6">
-              <img
-                src={`http://localhost:3000/uploads/${post.image}`}
+              <ImageDisplay
+                imagePath={post.image}
                 alt={post.title}
-                className="h-64 w-full object-cover rounded-md"
+                className="h-64 w-full"
               />
             </div>
           )}

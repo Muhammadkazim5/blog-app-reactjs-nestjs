@@ -9,6 +9,7 @@ import {
   PencilIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import ImageDisplay from '../components/ImageDisplay';
 
 const UserDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -249,10 +250,10 @@ const UserDetail = () => {
 
                   {post.image && (
                     <div className="mb-4">
-                      <img
-                        src={`http://localhost:3000/uploads/${post.image}`}
+                      <ImageDisplay
+                        imagePath={post.image}
                         alt={post.title}
-                        className="h-48 w-full object-cover rounded-md"
+                        className="h-48 w-full"
                       />
                     </div>
                   )}
