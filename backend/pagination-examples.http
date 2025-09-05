@@ -1,0 +1,63 @@
+### Posts Pagination Examples
+
+### Get all posts with default pagination (page=1, limit=10)
+GET http://localhost:3000/posts
+
+### Get posts with custom pagination - page 2, limit 5
+GET http://localhost:3000/posts?page=2&limit=5
+
+### Get posts with only page specified (limit will default to 10)
+GET http://localhost:3000/posts?page=3
+
+### Get posts with only limit specified (page will default to 1)
+GET http://localhost:3000/posts?limit=20
+
+### Get posts by user with pagination
+GET http://localhost:3000/posts/user/1?page=1&limit=5
+
+### Get posts by user with default pagination
+GET http://localhost:3000/posts/user/1
+
+### Example Response Format:
+# {
+#   "data": [
+#     {
+#       "id": 1,
+#       "title": "Sample Post",
+#       "content": "This is a sample post content",
+#       "image": "image-filename.jpg",
+#       "author": {
+#         "id": 1,
+#         "username": "john_doe",
+#         "email": "john@example.com"
+#       },
+#       "comments": [
+#         {
+#           "id": 1,
+#           "content": "Great post!",
+#           "user": {
+#             "id": 2,
+#             "username": "jane_doe"
+#           }
+#         }
+#       ]
+#     }
+#   ],
+#   "total": 25,
+#   "page": 1,
+#   "limit": 10,
+#   "totalPages": 3,
+#   "hasNext": true,
+#   "hasPrev": false
+# }
+
+### Error Examples:
+
+### Invalid page number (should be >= 1)
+GET http://localhost:3000/posts?page=0
+
+### Invalid limit (should be > 0)
+GET http://localhost:3000/posts?limit=0
+
+### Invalid page type (should be integer)
+GET http://localhost:3000/posts?page=abc

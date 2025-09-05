@@ -1,0 +1,211 @@
+### Blog API Test Requests
+
+### 1. Create Users
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com"
+}
+
+###
+
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com"
+}
+
+###
+
+### 2. Get All Users
+GET http://localhost:3000/users
+
+###
+
+### 3. Create Posts (without images)
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "My First Blog Post",
+  "content": "This is the content of my first blog post. I'm excited to share my thoughts with everyone!",
+  "userId": 1
+}
+
+###
+
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "Learning NestJS",
+  "content": "NestJS is a fantastic framework for building scalable Node.js applications. The decorators make it so clean!",
+  "userId": 1
+}
+
+###
+
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "TypeORM Best Practices",
+  "content": "Here are some best practices for using TypeORM in your NestJS applications...",
+  "userId": 2
+}
+
+###
+
+### 3.1. Create Posts with Images (using multipart/form-data)
+# Note: Replace 'path/to/your/image.jpg' with actual file path
+POST http://localhost:3000/posts
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="title"
+
+My Post with Image
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="content"
+
+This post includes an image to make it more engaging!
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="userId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="example.jpg"
+Content-Type: image/jpeg
+
+< ./path/to/your/image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+
+### 3.2. Create Posts with Image URL (JSON)
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "Post with Image URL",
+  "content": "This post references an image via URL.",
+  "image": "https://example.com/image.jpg",
+  "userId": 1
+}
+
+###
+
+### 4. Get All Posts (with comments and authors)
+GET http://localhost:3000/posts
+
+###
+
+### 5. Get Posts by User
+GET http://localhost:3000/posts/user/1
+
+###
+
+### 6. Create Comments
+POST http://localhost:3000/comments
+Content-Type: application/json
+
+{
+  "content": "Great post! Thanks for sharing your experience.",
+  "postId": 1,
+  "userId": 2
+}
+
+###
+
+POST http://localhost:3000/comments
+Content-Type: application/json
+
+{
+  "content": "I learned a lot from this article. Looking forward to more posts!",
+  "postId": 1,
+  "userId": 1
+}
+
+###
+
+POST http://localhost:3000/comments
+Content-Type: application/json
+
+{
+  "content": "NestJS is indeed amazing! Great write-up.",
+  "postId": 2,
+  "userId": 2
+}
+
+###
+
+### 7. Get Comments by Post
+GET http://localhost:3000/comments/post/1
+
+###
+
+### 8. Get Comments by User
+GET http://localhost:3000/comments/user/2
+
+###
+
+### 9. Get Specific Post with Comments
+GET http://localhost:3000/posts/1
+
+###
+
+### 10. Update a Post
+PATCH http://localhost:3000/posts/1
+Content-Type: application/json
+
+{
+  "title": "My First Blog Post - Updated",
+  "content": "This is the updated content of my first blog post. I've made some improvements!"
+}
+
+###
+
+### 10.1. Update a Post with Image
+PATCH http://localhost:3000/posts/1
+Content-Type: application/json
+
+{
+  "title": "My First Blog Post - Updated with Image",
+  "content": "This is the updated content with an image!",
+  "image": "https://example.com/new-image.jpg"
+}
+
+###
+
+### 11. Update a Comment
+PATCH http://localhost:3000/comments/1
+Content-Type: application/json
+
+{
+  "content": "Excellent post! Thanks for sharing your experience."
+}
+
+###
+
+### 12. Delete a Comment
+DELETE http://localhost:3000/comments/2
+
+###
+
+### 13. Delete a Post
+DELETE http://localhost:3000/posts/3
+
+###
+
+### 14. Delete a User
+DELETE http://localhost:3000/users/2
+
+###
+
+### 15. Access Uploaded Images
+# Images are served at /uploads/{filename}
+GET http://localhost:3000/uploads/example-image.jpg
