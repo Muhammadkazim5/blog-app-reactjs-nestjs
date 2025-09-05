@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { postApi } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,14 +27,10 @@ const Posts = () => {
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  useEffect(() => {
-    fetchPosts();
-  }, [currentPage]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await postApi.getAll({ page: currentPage, limit });
+      const data = await postApi.getAllWithPagination({ page: currentPage, limit });
       setPosts(data);
       setError(null);
     } catch (err) {
@@ -43,7 +39,11 @@ const Posts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, limit]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,12 +218,12 @@ const Posts = () => {
 
       {/* Posts List */}
       <div className="space-y-4">
-        {posts?.data.length === 0 ? (
+        {posts?.data?.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-6 text-center text-gray-500">
             No posts found. Create your first post!
           </div>
         ) : (
-          posts?.data.map((post) => (
+          posts?.data?.map((post) => (
             <div key={post.id} className="bg-white shadow rounded-lg overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
