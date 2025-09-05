@@ -75,11 +75,29 @@ export class PostsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const randomName = Array(32)
+            .fill(null)
+            .map(() => Math.round(Math.random() * 16).toString(16))
+            .join('');
+          return cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePostDto: UpdatePostDto,
+    @UploadedFile() file?: Express.Multer.File,
     @Request() req?: any,
   ) {
+    if (file) {
+      updatePostDto.image = file.filename;
+    }
     return this.postsService.update(id, updatePostDto, req.user.id);
   }
 

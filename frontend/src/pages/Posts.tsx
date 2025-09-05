@@ -55,7 +55,7 @@ const Posts = () => {
         await postApi.update(editingPost.id, {
           title: formData.title,
           content: formData.content,
-        });
+        }, selectedImage || undefined);
         setEditingPost(null);
       } else {
         await postApi.create(formData, selectedImage || undefined);
@@ -179,17 +179,16 @@ const Posts = () => {
                 required
               />
             </div>
-            {!editingPost && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image (optional)
-                </label>
-                <ImageUpload
-                  onImageSelect={setSelectedImage}
-                  className="max-w-md"
-                />
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image (optional)
+              </label>
+              <ImageUpload
+                onImageSelect={setSelectedImage}
+                currentImage={editingPost?.image}
+                className="max-w-md"
+              />
+            </div>
             <div className="flex space-x-3">
               <button
                 type="submit"

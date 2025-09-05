@@ -13,6 +13,7 @@ import {
   LockClosedIcon
 } from '@heroicons/react/24/outline';
 import ImageDisplay from '../components/ImageDisplay';
+import ImageUpload from '../components/ImageUpload';
 
 const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ const PostDetail = () => {
     title: '',
     content: '',
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const [commentFormData, setCommentFormData] = useState<CreateCommentAuthDto>({
     content: '',
@@ -70,8 +72,9 @@ const PostDetail = () => {
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await postApi.update(post!.id, postFormData);
+      await postApi.update(post!.id, postFormData, selectedImage || undefined);
       setShowEditForm(false);
+      setSelectedImage(null);
       fetchPost();
     } catch (err) {
       setError('Failed to update post');
@@ -108,6 +111,7 @@ const PostDetail = () => {
   const handleCancelPost = () => {
     setShowEditForm(false);
     setPostFormData({ title: post!.title, content: post!.content });
+    setSelectedImage(null);
   };
 
   const handleCancelComment = () => {
@@ -194,6 +198,16 @@ const PostDetail = () => {
                 onChange={(e) => setPostFormData({ ...postFormData, content: e.target.value })}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image
+              </label>
+              <ImageUpload
+                onImageSelect={setSelectedImage}
+                currentImage={post.image}
+                className="max-w-md"
               />
             </div>
             <div className="flex space-x-3">

@@ -163,9 +163,25 @@ export const postApi = {
     }
   },
 
-  update: async (id: number, data: UpdatePostDto): Promise<Post> => {
-    const response = await api.patch(`/posts/${id}`, data);
-    return response.data;
+  update: async (id: number, data: UpdatePostDto, image?: File): Promise<Post> => {
+    if (image) {
+      // Use FormData for file uploads
+      const formData = new FormData();
+      if (data.title) formData.append('title', data.title);
+      if (data.content) formData.append('content', data.content);
+      formData.append('image', image);
+
+      const response = await api.patch(`/posts/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } else {
+      // Use JSON for regular updates
+      const response = await api.patch(`/posts/${id}`, data);
+      return response.data;
+    }
   },
 
   delete: async (id: number): Promise<void> => {
