@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { commentApi, userApi, postApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import type { CommentWithRelations, CreateCommentDto, User, PostWithRelations } from '../types';
 import { 
   PlusIcon, 
@@ -11,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Comments = () => {
+  const { user, isAuthenticated } = useAuth();
   const [comments, setComments] = useState<CommentWithRelations[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [posts, setPosts] = useState<PostWithRelations[]>([]);
@@ -240,20 +242,24 @@ const Comments = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(comment)}
-                      className="text-yellow-600 hover:text-yellow-900"
-                      title="Edit"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(comment.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    {isAuthenticated && user && comment.user.id === user.id && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(comment)}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Edit"
+                        >
+                          <PencilIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(comment.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Delete"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
                 

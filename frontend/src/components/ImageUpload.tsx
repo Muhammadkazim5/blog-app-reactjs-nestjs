@@ -3,7 +3,7 @@ import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { validateImageFile, createImagePreview, formatFileSize } from '../utils/imageUtils';
 
 interface ImageUploadProps {
-  onImageSelect: (file: File | null) => void;
+  onImageSelect: (file: File | null, removeImage?: boolean) => void;
   currentImage?: string;
   className?: string;
 }
@@ -17,6 +17,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [showCurrentImage, setShowCurrentImage] = useState(true);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (file: File) => {
@@ -30,14 +32,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
 
     setSelectedFile(file);
+    setShowCurrentImage(false); // Hide current image when new file is selected
+    setRemoveExistingImage(false); // Reset removal flag when new file is selected
     
     // Create preview
     try {
       const preview = await createImagePreview(file);
       setPreviewUrl(preview);
-      onImageSelect(file);
+      onImageSelect(file, false);
     } catch (err) {
       setError('Failed to create image preview');
+      console.error('Error creating image preview:', err);
     }
   };
 
@@ -73,7 +78,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setSelectedFile(null);
     setPreviewUrl(null);
     setError(null);
-    onImageSelect(null);
+    setRemoveExistingImage(true); // Mark that existing image should be removed
+    setShowCurrentImage(false); // Hide current image
+    onImageSelect(null, true); // Signal to parent that existing image should be removed
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -81,6 +88,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
+  };
+
+  const restoreExistingImage = () => {
+    setRemoveExistingImage(false);
+    setShowCurrentImage(true);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setError(null);
+    onImageSelect(null, false); // Signal to parent to keep existing image
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -105,7 +124,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           className="hidden"
         />
         
-        {previewUrl || currentImage ? (
+        {previewUrl || (currentImage && showCurrentImage && !removeExistingImage) ? (
           <div className="space-y-4">
             <div className="relative inline-block">
               <img
@@ -147,6 +166,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 PNG, JPG, GIF, WebP up to 5MB
               </p>
             </div>
+            
+            {/* Show restore option if existing image was removed */}
+            {currentImage && removeExistingImage && (
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-2">Original image removed</p>
+                <button
+                  type="button"
+                  onClick={restoreExistingImage}
+                  className="text-sm text-green-600 hover:text-green-500 font-medium"
+                >
+                  Restore original image
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

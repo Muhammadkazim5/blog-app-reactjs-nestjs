@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from './comment.entity';
@@ -69,8 +73,14 @@ export class CommentsService {
   async update(
     id: number,
     updateCommentDto: Partial<CreateCommentDto>,
+    userId: number,
   ): Promise<Comment> {
     const comment = await this.findOne(id);
+
+    // Check if the user is the author of the comment
+    if (comment.user.id !== userId) {
+      throw new ForbiddenException('You can only update your own comments');
+    }
 
     if (updateCommentDto.userId) {
       const user = await this.usersRepository.findOne({
@@ -102,8 +112,14 @@ export class CommentsService {
     return await this.commentsRepository.save(comment);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
     const comment = await this.findOne(id);
+
+    // Check if the user is the author of the comment
+    if (comment.user.id !== userId) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
     await this.commentsRepository.remove(comment);
   }
 

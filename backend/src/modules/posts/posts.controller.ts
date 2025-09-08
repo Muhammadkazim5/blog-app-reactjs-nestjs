@@ -97,6 +97,8 @@ export class PostsController {
   ) {
     if (file) {
       updatePostDto.image = file.filename;
+    } else if (updatePostDto.image === 'REMOVE_IMAGE') {
+      updatePostDto.image = undefined;
     }
     return this.postsService.update(id, updatePostDto, req.user.id);
   }

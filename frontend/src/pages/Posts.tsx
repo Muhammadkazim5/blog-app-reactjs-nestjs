@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ImageUpload from '../components/ImageUpload';
 import ImageDisplay from '../components/ImageDisplay';
+import Modal from '../components/Modal';
 
 const Posts = () => {
   const { user, isAuthenticated } = useAuth();
@@ -28,6 +29,7 @@ const Posts = () => {
     content: '',
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -55,7 +57,7 @@ const Posts = () => {
         await postApi.update(editingPost.id, {
           title: formData.title,
           content: formData.content,
-        }, selectedImage || undefined);
+        }, selectedImage || undefined, removeImage);
         setEditingPost(null);
       } else {
         await postApi.create(formData, selectedImage || undefined);
@@ -96,6 +98,12 @@ const Posts = () => {
     setEditingPost(null);
     setFormData({ title: '', content: '' });
     setSelectedImage(null);
+    setRemoveImage(false);
+  };
+
+  const handleImageSelect = (file: File | null, shouldRemoveImage?: boolean) => {
+    setSelectedImage(file);
+    setRemoveImage(shouldRemoveImage || false);
   };
 
 
@@ -146,67 +154,67 @@ const Posts = () => {
         </div>
       )}
 
-      {/* Create/Edit Form */}
-      {showCreateForm && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            {editingPost ? 'Edit Post' : 'Create New Post'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-                Content
-              </label>
-              <textarea
-                id="content"
-                rows={4}
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image (optional)
-              </label>
-              <ImageUpload
-                onImageSelect={setSelectedImage}
-                currentImage={editingPost?.image}
-                className="max-w-md"
-              />
-            </div>
-            <div className="flex space-x-3">
-              <button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-              >
-                {editingPost ? 'Update' : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={showCreateForm}
+        onClose={handleCancel}
+        title={editingPost ? 'Edit Post' : 'Create New Post'}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+              Content
+            </label>
+            <textarea
+              id="content"
+              rows={6}
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Image (optional)
+            </label>
+            <ImageUpload
+              onImageSelect={handleImageSelect}
+              currentImage={editingPost?.image}
+              className="max-w-md"
+            />
+          </div>
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+            >
+              {editingPost ? 'Update' : 'Create'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Posts List */}
       <div className="space-y-4">

@@ -11,10 +11,14 @@ import {
   Request,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateCommentAuthDto } from './dto/create-comment-auth.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User } from '../users/user.entity';
+
+interface AuthenticatedRequest extends Request {
+  user: User;
+}
 
 @Controller('comments')
 export class CommentsController {
@@ -22,7 +26,10 @@ export class CommentsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createCommentDto: CreateCommentAuthDto, @Request() req) {
+  create(
+    @Body() createCommentDto: CreateCommentAuthDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     // Use the authenticated user's ID instead of requiring it in the DTO
     return this.commentsService.create({
       ...createCommentDto,
@@ -50,16 +57,22 @@ export class CommentsController {
     return this.commentsService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCommentDto: UpdateCommentDto,
+    @Request() req: AuthenticatedRequest,
   ) {
-    return this.commentsService.update(id, updateCommentDto);
+    return this.commentsService.update(id, updateCommentDto, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.commentsService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.commentsService.remove(id, req.user.id);
   }
 }

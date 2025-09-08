@@ -163,7 +163,7 @@ export const postApi = {
     }
   },
 
-  update: async (id: number, data: UpdatePostDto, image?: File): Promise<Post> => {
+  update: async (id: number, data: UpdatePostDto, image?: File, removeImage?: boolean): Promise<Post> => {
     if (image) {
       // Use FormData for file uploads
       const formData = new FormData();
@@ -176,6 +176,11 @@ export const postApi = {
           'Content-Type': 'multipart/form-data',
         },
       });
+      return response.data;
+    } else if (removeImage) {
+      // Use JSON to remove existing image
+      const updateData = { ...data, image: 'REMOVE_IMAGE' };
+      const response = await api.patch(`/posts/${id}`, updateData);
       return response.data;
     } else {
       // Use JSON for regular updates

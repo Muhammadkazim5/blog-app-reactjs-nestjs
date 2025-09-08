@@ -30,6 +30,7 @@ const PostDetail = () => {
     content: '',
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [commentFormData, setCommentFormData] = useState<CreateCommentAuthDto>({
     content: '',
@@ -72,7 +73,7 @@ const PostDetail = () => {
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await postApi.update(post!.id, postFormData, selectedImage || undefined);
+      await postApi.update(post!.id, postFormData, selectedImage || undefined, removeImage);
       setShowEditForm(false);
       setSelectedImage(null);
       fetchPost();
@@ -112,6 +113,12 @@ const PostDetail = () => {
     setShowEditForm(false);
     setPostFormData({ title: post!.title, content: post!.content });
     setSelectedImage(null);
+    setRemoveImage(false);
+  };
+
+  const handleImageSelect = (file: File | null, shouldRemoveImage?: boolean) => {
+    setSelectedImage(file);
+    setRemoveImage(shouldRemoveImage || false);
   };
 
   const handleCancelComment = () => {
@@ -205,7 +212,7 @@ const PostDetail = () => {
                 Image
               </label>
               <ImageUpload
-                onImageSelect={setSelectedImage}
+                onImageSelect={handleImageSelect}
                 currentImage={post.image}
                 className="max-w-md"
               />
@@ -359,13 +366,15 @@ const PostDetail = () => {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Delete"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
+                    {isAuthenticated && user && comment.user.id === user.id && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
                   
                   <p className="text-gray-700">
